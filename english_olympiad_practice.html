@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Olympiad Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .question-card {
+            transition: all 0.3s ease;
+        }
+        .hidden-element {
+            display: none !important;
+        }
+        .show-answer {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .timer-warning {
+            color: #ef4444; /* Tailwind red-500 */
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased">
+
+<div class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white shadow-lg sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <h1 class="text-3xl font-bold text-center">English Olympiad Practice</h1>
+            <p class="text-center text-indigo-200 mt-2">Comprehensive practice based on standard syllabus</p>
+        </div>
+        
+        <!-- Category Navigation -->
+        <nav class="bg-indigo-800 overflow-x-auto">
+            <div class="max-w-7xl mx-auto px-4 flex space-x-2 py-3" id="category-nav">
+                <button onclick="startCategory('words')" class="nav-btn bg-white text-indigo-800 px-4 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-colors" id="btn-words">Words & Structure</button>
+                <button onclick="startCategory('reading')" class="nav-btn text-indigo-100 hover:bg-indigo-600 px-4 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-colors" id="btn-reading">Reading</button>
+                <button onclick="startCategory('spoken')" class="nav-btn text-indigo-100 hover:bg-indigo-600 px-4 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-colors" id="btn-spoken">Spoken & Written</button>
+                <button onclick="startCategory('hots')" class="nav-btn text-indigo-100 hover:bg-indigo-600 px-4 py-2 rounded-md font-medium text-sm whitespace-nowrap transition-colors" id="btn-hots">HOTS</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        
+        <!-- Dashboard/Info Header -->
+        <div id="quiz-header" class="hidden-element bg-white rounded-lg shadow-sm p-4 mb-6 flex justify-between items-center border border-gray-200">
+            <div>
+                <h2 id="current-category-title" class="text-xl font-bold text-indigo-900">Category Name</h2>
+                <p id="question-counter" class="text-gray-600 text-sm">Question 1 of X</p>
+            </div>
+            <div class="text-right">
+                <div class="text-sm text-gray-500 font-medium">Time Elapsed</div>
+                <div id="timer-display" class="text-2xl font-mono font-bold text-gray-800">00:00</div>
+            </div>
+        </div>
+
+        <!-- Question Container -->
+        <div id="single-question-container" class="space-y-6">
+            <!-- Initial state message -->
+            <div id="welcome-message" class="text-center py-20 bg-white rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Welcome to English Olympiad Practice</h2>
+                <p class="text-gray-600 mb-8 max-w-md mx-auto">Select a category above to start practicing. Your time will be recorded to help you evaluate your speed.</p>
+                <svg class="w-24 h-24 mx-auto text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            </div>
+        </div>
+
+        <!-- Navigation Controls -->
+        <div id="quiz-controls" class="hidden-element flex justify-between mt-8 border-t border-gray-200 pt-6">
+            <button onclick="prevQuestion()" id="btn-prev" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                Previous
+            </button>
+            
+            <button onclick="checkAnswer()" id="btn-check" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md transition-colors shadow">
+                Check Answer
+            </button>
+
+            <button onclick="nextQuestion()" id="btn-next" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow">
+                Next
+            </button>
+        </div>
+        
+        <!-- Summary Screen -->
+        <div id="summary-screen" class="hidden-element bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center mt-6">
+            <h2 class="text-3xl font-bold text-indigo-900 mb-4">Practice Complete!</h2>
+            <div class="grid grid-cols-2 gap-4 max-w-md mx-auto mb-8">
+                <div class="bg-indigo-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500 uppercase tracking-wide">Category</p>
+                    <p id="summary-category" class="font-bold text-lg text-indigo-800">Words & Structure</p>
+                </div>
+                <div class="bg-emerald-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-500 uppercase tracking-wide">Total Time</p>
+                    <p id="summary-time" class="font-bold text-xl font-mono text-emerald-700">00:00</p>
+                </div>
+            </div>
+            <button onclick="resetApp()" class="bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-md font-medium transition-colors shadow">
+                Return to Menu
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 py-6 text-center text-sm">
+        <p>Designed for English Olympiad Preparation.</p>
+    </footer>
+</div>
+
+<script>
+    // Data structure holding all questions based on the provided syllabus
+    const questionsData = {
+        words: {
+            title: "Bagian A: Words & Structure Knowledge",
+            description: "Vocabulary, tenses, conjunctions, synonyms-antonyms, relative clauses.",
+            count: 20,
+            questions: [
+                {
+                    q: "Choose the word that correctly completes the sentence: The children were hungry, so they ate all the ______ on the table.",
+                    options: ["apple", "apples", "appled", "appling"],
+                    answer: 1, // Index of correct option
+                    explanation: "'Apples' is the correct plural noun form fitting the context of eating multiple items."
+                },
+                {
+                    q: "The documentary was absolutely _____; I couldn't take my eyes off the screen.",
+                    options: ["boring", "fascinating", "fascinated", "bore"],
+                    answer: 1,
+                    explanation: "'Fascinating' is an adjective describing the documentary."
+                },
+                {
+                    q: "By the time we arrive at the station, the train ______.",
+                    options: ["will have left", "left", "will leave", "has left"],
+                    answer: 0,
+                    explanation: "Future Perfect tense ('will have left') is used for an action completed before a specific time in the future."
+                },
+                {
+                    q: "Identify the antonym of the word 'ABUNDANT':",
+                    options: ["Plentiful", "Scarce", "Copious", "Bountiful"],
+                    answer: 1,
+                    explanation: "'Scarce' means insufficient or rare, which is the opposite of abundant."
+                },
+                {
+                    q: "The book, ______ cover was torn, turned out to be a rare first edition.",
+                    options: ["who", "whom", "whose", "which"],
+                    answer: 2,
+                    explanation: "'Whose' is a relative pronoun showing possession (the cover of the book)."
+                },
+                {
+                    q: "I would have bought that jacket if it ______ so expensive.",
+                    options: ["is not", "hadn't been", "wasn't", "wouldn't be"],
+                    answer: 1,
+                    explanation: "Third conditional structure: 'if' + past perfect ('hadn't been') + 'would have' + past participle."
+                },
+                {
+                    q: "Neither the manager nor the employees ______ aware of the new policy.",
+                    options: ["is", "are", "was", "has been"],
+                    answer: 1,
+                    explanation: "When using 'neither/nor', the verb agrees with the subject closest to it (employees - plural)."
+                },
+                {
+                    q: "She has a reputation ______ being extremely punctual.",
+                    options: ["for", "of", "in", "about"],
+                    answer: 0,
+                    explanation: "The correct preposition to use after 'reputation' in this context is 'for'."
+                },
+                {
+                    q: "Which sentence is grammatically correct?",
+                    options: ["She enjoys to read books.", "She enjoys reading books.", "She enjoys read books.", "She enjoy reading books."],
+                    answer: 1,
+                    explanation: "The verb 'enjoy' is followed by a gerund (-ing form)."
+                },
+                {
+                    q: "What is a synonym for 'METICULOUS'?",
+                    options: ["Careless", "Sloppy", "Careful", "Hasty"],
+                    answer: 2,
+                    explanation: "'Meticulous' means showing great attention to detail; careful."
+                },
+                {
+                    q: "He didn't study for the test, ______ he failed.",
+                    options: ["however", "although", "therefore", "because"],
+                    answer: 2,
+                    explanation: "'Therefore' correctly indicates cause and effect (conjunction of result)."
+                },
+                {
+                    q: "The committee ______ its decision tomorrow.",
+                    options: ["announce", "will announce", "announcing", "announced"],
+                    answer: 1,
+                    explanation: "Simple future tense indicates an action that will happen later."
+                },
+                 {
+                    q: "If I _____ a bird, I would fly across the ocean.",
+                    options: ["am", "was", "were", "be"],
+                    answer: 2,
+                    explanation: "Second conditional uses 'were' for all subjects to express a hypothetical situation."
+                },
+                {
+                    q: "The concert was cancelled _____ the heavy rain.",
+                    options: ["because", "since", "due to", "as"],
+                    answer: 2,
+                    explanation: "'Due to' is followed by a noun phrase, whereas 'because' requires a clause."
+                },
+                {
+                    q: "Identify the correct comparative form: This puzzle is _____ than the last one.",
+                    options: ["more difficult", "most difficult", "difficulter", "difficult"],
+                    answer: 0,
+                    explanation: "Adjectives with three or more syllables use 'more' for the comparative."
+                },
+                 {
+                    q: "She asked me where _____.",
+                    options: ["was I going", "I was going", "am I going", "I am going"],
+                    answer: 1,
+                    explanation: "In reported questions, standard subject-verb order is used, not question order."
+                },
+                {
+                    q: "Hardly had we left the house _____ it started to rain.",
+                    options: ["than", "when", "then", "while"],
+                    answer: 1,
+                    explanation: "The structure 'Hardly had... when...' is used to say that one thing happened very soon after another."
+                },
+                {
+                    q: "The word 'OBSTINATE' is closest in meaning to:",
+                    options: ["Flexible", "Stubborn", "Cooperative", "Weak"],
+                    answer: 1,
+                    explanation: "Obstinate means stubbornly refusing to change one's opinion or chosen course of action."
+                },
+                 {
+                    q: "I am looking forward to _____ you next week.",
+                    options: ["see", "seeing", "seen", "have seen"],
+                    answer: 1,
+                    explanation: "The phrasal verb 'look forward to' is followed by a gerund (-ing form)."
+                },
+                {
+                    q: "It's high time you _____ your homework.",
+                    options: ["do", "did", "done", "are doing"],
+                    answer: 1,
+                    explanation: "The phrase 'It's high time' is followed by a subject and a past tense verb to indicate something should have been done already."
+                }
+            ]
+        },
+        reading: {
+            title: "Bagian B: Reading Comprehension",
+            description: "Main idea, idiomatic phrases, cause and effect, figurative language.",
+            count: 10,
+            questions: [
+                {
+                    q: "<strong>Read the following excerpt carefully:</strong><br><br>The final buzzer of the championship game echoed through the gymnasium. The scoreboard glared down, displaying a harsh reality: they had lost by a single point. When the whistle blew, Leo dropped his basketball and slowly slumped onto the wooden bench, his chest heaving. Ignoring the comforting pats on the back from his teammates, he pulled off his left shoe. With a grimace, he gently rubbed his swollen ankle, wincing sharply every time he attempted to rotate his foot. It had been bothering him since the second quarter, but he had pushed through the pain, determined not to let his team down.<br><br><strong>Why did Leo slump onto the bench?</strong>",
+                    options: ["He was exhausted and bored of playing basketball after a long season.", "He was furious at the referee's final decision that cost them the game.", "He had severely injured his foot or ankle and was in physical pain.", "He urgently needed to tie his shoelaces before leaving the court."],
+                    answer: 2,
+                    explanation: "While they lost the game, the text specifically notes he 'gently rubbed his swollen ankle' and was 'wincing sharply', indicating the physical pain/injury was the immediate reason for his action on the bench."
+                },
+                {
+                    q: "<strong>Read the following descriptive passage:</strong><br><br>The traveler finally reached the crest of the hill as the sun began to dip below the horizon. Below him lay the abandoned village, shrouded in creeping mist. The old manor house stood at the end of the lane, a silent sentinel watching over the forgotten valley. Its dilapidated roof sagged under the weight of years of neglect. Its tall, narrow windows, like hollow eyes, stared out blankly into the gathering twilight, giving the distinct impression that the house itself was mourning the life that had once filled its halls.<br><br><strong>What type of figurative language is used in the phrase 'windows, like hollow eyes'?</strong>",
+                    options: ["Metaphor", "Simile", "Personification", "Hyperbole"],
+                    answer: 1,
+                    explanation: "A simile compares two different things using the words 'like' or 'as'. Here, windows are explicitly compared to hollow eyes using 'like'."
+                },
+                {
+                    q: "<strong>Read the following short narrative:</strong><br><br>The morning sky was bruised with dark, heavy clouds, and the forecast had predicted a severe downpour by noon. Despite the pouring rain that began exactly on schedule, Sarah stubbornly decided to walk the six blocks to the downtown grocery store. Her motivation was simple: it was a holiday weekend, and she didn't want to lose the prime parking spot she had secured right in front of her apartment building. Consequently, she arrived at the store completely soaked to the bone, shivering as she pushed a cart down the freezer aisle.<br><br><strong>Based on the text, what is the direct cause of Sarah arriving soaked?</strong>",
+                    options: ["She had lost her prime parking spot earlier.", "The grocery store was located very far away.", "She made a deliberate choice to walk in the heavy rain.", "She had forgotten to bring an umbrella."],
+                    answer: 2,
+                    explanation: "The text states 'Despite the pouring rain... Sarah stubbornly decided to walk'. Her active choice to walk in those conditions directly caused her to get wet."
+                },
+                {
+                    q: "<strong>Read the following scenario:</strong><br><br>The annual office bake sale was usually a massive success, but this year, the funds raised were significantly lower than expected. Furthermore, an entire tray of expensive macadamia nut cookies had inexplicably vanished before the sale even began. When the office manager, Mrs. Higgins, sternly asked the team about the missing cookies during the staff meeting, Tommy quickly passed the buck to his younger sister, claiming she had been wandering around the breakroom earlier that morning.<br><br><strong>What does the idiom 'passed the buck' mean in this context?</strong>",
+                    options: ["Generously shared the remaining cookies with his sister", "Shifted the responsibility or blame onto someone else", "Gave a small amount of money to compensate for the loss", "Told the absolute truth about what happened"],
+                    answer: 1,
+                    explanation: "'Pass the buck' is a common English idiom that means to evade responsibility by passing it on to someone else."
+                },
+                {
+                    q: "<strong>Read the following business passage:</strong><br><br>In an effort to modernize operations, Alpha Manufacturing implemented a state-of-the-art inventory tracking software last month. Management expected immediate efficiency gains. However, the introduction of the new software system caused a massive bottleneck in production during the first two weeks. The interface was radically different from the old system, and floor workers had to undergo an mandatory, intensive week of training just to understand the basics. This unexpected learning curve slowed down the assembly line significantly, resulting in a 15% drop in output for the quarter.<br><br><strong>What is the main idea of this passage?</strong>",
+                    options: ["Factory workers generally need more training to operate modern machinery.", "The assembly line at Alpha Manufacturing is inherently too slow.", "The implementation of new software temporarily disrupted production.", "Production bottlenecks are a common, unavoidable occurrence in manufacturing."],
+                    answer: 2,
+                    explanation: "The passage focuses entirely on how the specific event (introducing new software) led to a temporary disruption (training, slowing down, drop in output)."
+                },
+                {
+                    q: "<strong>Read the following political commentary:</strong><br><br>The city council had been deadlocked for months, debating the budget without making any real progress. Citizens were growing increasingly frustrated with the endless arguments and lack of action regarding infrastructure repairs. When the newly elected mayor finally took the podium at the town hall meeting, her speech was a breath of fresh air after months of political stagnation. She skipped the usual rhetoric and immediately proposed clear, actionable, and funded steps for city improvement that both sides could agree on.<br><br><strong>The phrase 'a breath of fresh air' suggests the mayor's speech was:</strong>",
+                    options: ["Literally windy, cold, and delivered outdoors", "Refreshing, new, and a positive change", "Complicated and difficult to understand", "Boring, predictable, and typical for a politician"],
+                    answer: 1,
+                    explanation: "The idiom 'a breath of fresh air' is used to describe someone or something that is new, different, and makes a situation feel better or more exciting."
+                },
+                 {
+                    q: "<strong>Read the following atmospheric description:</strong><br><br>The old cabin sat precariously on the edge of the cliff. As the autumn storm rolled in from the coast, the temperature dropped rapidly. The wind howled through the long, dark night, rattling the loose windowpanes and sweeping dead leaves across the porch. Inside, the family huddled around the fireplace, kept awake not by the cold, but by the relentless noise of the gale battering the wooden walls.<br><br><strong>What literary device is used in the phrase 'The wind howled'?</strong>",
+                    options: ["Simile", "Metaphor", "Personification", "Alliteration"],
+                    answer: 2,
+                    explanation: "Personification is attributing human qualities or actions (howling, like an animal or a person in pain) to inanimate objects or natural elements (the wind)."
+                },
+                {
+                    q: "<strong>Read the following sequence of events:</strong><br><br>Meteorologists had warned of a severe winter storm approaching the northeast corridor, but the intensity took everyone by surprise. Due to the sudden, blinding snowstorm and rapid ice accumulation on the runways, the regional airport authority determined it was unsafe to operate. Consequently, all outbound and inbound flights were instantly grounded. Therefore, hundreds of weary travelers found themselves stranded with nowhere to go, and many spent the entire night in the terminal, attempting to sleep on uncomfortable chairs or the hard floor.<br><br><strong>What is the final effect described in this scenario?</strong>",
+                    options: ["The sudden and intense snowstorm hitting the area", "The airport authority deciding to ground all flights", "The terminal becoming excessively cold and crowded", "Stranded travelers being forced to spend the night in the terminal"],
+                    answer: 3,
+                    explanation: "The snowstorm is the root cause, grounded flights are the immediate effect, and the final result (effect) described is the travelers sleeping in the terminal."
+                },
+                {
+                    q: "<strong>Read the following environmental science text:</strong><br><br>Scientific data collected over the past few decades indicates a troubling trend in polar regions. Global warming, driven largely by greenhouse gas emissions, is causing polar ice caps and massive glaciers to melt at an unprecedented rate. This immense volume of freshwater flowing into the oceans directly leads to rising sea levels worldwide. As a result, this phenomenon poses a severe and immediate threat to low-lying coastal communities, increasing the risk of catastrophic flooding, erosion, and loss of habitable land.<br><br><strong>What is the primary topic of this text?</strong>",
+                    options: ["The aesthetic beauty and ecological importance of ice caps", "The chain reaction leading to the threat of rising sea levels due to climate change", "Engineering solutions for building stronger coastal flood defenses", "A detailed historical timeline of global warming discoveries"],
+                    answer: 1,
+                    explanation: "The text explains a clear progression: global warming causes melting ice, which causes rising sea levels, which threatens coastal communities. Option B accurately summarizes this chain."
+                },
+                {
+                    q: "<strong>Read the following sentence:</strong><br><br>Sarah was exhausted after driving around the crowded city center for forty-five minutes. There was a massive music festival happening in the park, drawing tens of thousands of visitors. She realized that finding a free parking space downtown during the festival was like looking for a needle in a haystack, so she eventually gave up and paid for an expensive private garage.<br><br><strong>What does the phrase 'looking for a needle in a haystack' mean in this context?</strong>",
+                    options: ["It is a very dangerous and risky activity.", "It requires looking through a large amount of debris.", "It is nearly impossible or incredibly difficult to achieve.", "It is a fun, challenging game to play while driving."],
+                    answer: 2,
+                    explanation: "The idiom 'a needle in a haystack' refers to something that is extremely hard to find because the area to search is too large or complex compared to the object being sought."
+                }
+            ]
+        },
+        spoken: {
+            title: "Bagian C: Spoken & Written Expression",
+            description: "Contextual dialogue, pragmatics, tone distinction.",
+            count: 5,
+            questions: [
+                {
+                    q: "Choose the best response to complete the conversation contextually:<br><br>Ayu is struggling with her math homework and asks Budi for a geometry tool.<br>Ayu: 'Thank you so much for lending me your ruler! I couldn't have finished this without it.'<br>Budi: '________'",
+                    options: ["You're welcome! Happy to help.", "I don't care, just give it back.", "Yes, it is mine. I bought it yesterday.", "Please give it now, I need it."],
+                    answer: 0,
+                    explanation: "'You're welcome! Happy to help' is the most natural, polite, and pragmatic response to genuine gratitude between peers."
+                },
+                {
+                    q: "Situation: You are attending a formal, high-stakes board meeting with senior executives. The CEO is speaking, but you have a crucial piece of financial data that contradicts his current point and needs to be addressed immediately before a decision is made.<br><br>Which phrase is most appropriate to use?",
+                    options: ["Hey, wait a minute, you're wrong!", "Excuse me, sir, may I interject for a brief moment?", "Stop talking, I have a better idea.", "Hang on a second, look at this chart."],
+                    answer: 1,
+                    explanation: "Option 1 uses highly formal and polite language ('Excuse me', 'may I interject') which is strictly required when interrupting a superior in a formal setting."
+                },
+                {
+                    q: "Read the following dialogue carefully to determine the tone:<br><br>Customer (frowning): 'Excuse me, I've been waiting for forty minutes, and this soup is completely cold!'<br>Waiter (wide-eyed, rushing over): 'Oh, I am terribly sorry, sir! That is unacceptable. Please, let me take that back to the kitchen and get you a fresh, piping hot bowl right away. I'll also bring a complimentary appetizer while you wait.'<br><br>What is the waiter's tone in this interaction?",
+                    options: ["Defensive and argumentative", "Apologetic, accommodating, and urgent", "Sarcastic and dismissive", "Indifferent and bored"],
+                    answer: 1,
+                    explanation: "The waiter uses strong apologetic language ('terribly sorry', 'unacceptable'), offers an immediate solution, and adds compensation (appetizer), showing a highly accommodating tone."
+                },
+                {
+                    q: "Choose the best empathetic response:<br><br>Friend 1 (sighing heavily): 'I haven't slept well in days. I'm feeling really overwhelmed and stressed about the upcoming university entrance exams.'<br>Friend 2: '________'",
+                    options: ["Well, good for you. At least you're taking them.", "You should have started studying harder months ago.", "I completely understand, it's a huge amount of pressure. Do you want to study together, or just vent?", "Don't worry, exams are actually really easy if you just relax."],
+                    answer: 2,
+                    explanation: "Option 2 acknowledges the friend's feelings ('I understand', 'pressure') and offers concrete support without being dismissive or judgmental."
+                },
+                {
+                    q: "Situation: You are walking down the hallway. A senior colleague asks, 'Have you finished the Q3 financial report yet?' You haven't started it yet because you were assigned a higher priority task by the director, but you plan to do it this afternoon.<br><br>What is the most pragmatic and professional response?",
+                    options: ["No, I haven't even looked at it.", "I haven't gotten to it yet, as I was finishing the Director's urgent request. It's next on my list and will be on your desk by 4 PM.", "Why do you care? It's not due until tomorrow.", "It's basically done in my head, I just need to type it."],
+                    answer: 1,
+                    explanation: "Option 1 provides context (why it isn't done), takes ownership, and sets a clear, reliable expectation for completion."
+                }
+            ]
+        },
+        hots: {
+            title: "Bagian D: Higher-Order Thinking Skills (HOTS)",
+            description: "Logical sentence unscrambling, idiomatic prepositions, multi-error analysis.",
+            count: 5,
+            questions: [
+                {
+                    q: "Synthesize the following fragments to construct a logically and grammatically sound sentence:<br><br>(1) rarely / (2) the young musical prodigy / (3) during / (4) makes technical mistakes / (5) live orchestral recitals",
+                    options: ["2 - 1 - 4 - 3 - 5", "1 - 2 - 4 - 5 - 3", "2 - 4 - 1 - 3 - 5", "5 - 3 - 2 - 1 - 4"],
+                    answer: 0,
+                    explanation: "The correct subject-verb-adverb order is 'The young musical prodigy (2) rarely (1) makes technical mistakes (4) during (3) live orchestral recitals (5)'."
+                },
+                {
+                    q: "Analyze the following sentences. Which one contains a critical error in parallel structure that disrupts the sentence's flow?",
+                    options: ["The head coach emphatically told the players that they should get a lot of sleep, not eat too much junk food, and to do some extensive warm-up exercises.", "During her summer vacation, Mary thoroughly enjoyed hiking in the mountains, swimming in the lake, and bicycling through the countryside.", "The veteran firefighter was publicly praised by the mayor for his unwavering honesty, his remarkable courage, and his lifelong dedication.", "Successfully completing the engineering task requires immense patience, advanced technical skill, and careful, long-term planning."],
+                    answer: 0,
+                    explanation: "Option A mixes base verbs ('should get', '[should] not eat') with an infinitive phrase ('to do'). To be parallel, it must drop 'to': '...and do some extensive warm-up exercises'."
+                },
+                {
+                    q: "Analyze the context of the sentence to identify the correct multi-word verb (phrasal verb) that means 'to compensate for a deficit':<br><br>Because of the massive power outage that halted production yesterday, we need to work overtime today to _____ the time and quota we lost.",
+                    options: ["make up for", "put up with", "get away with", "look down on"],
+                    answer: 0,
+                    explanation: "'Make up for' is the specific idiom meaning to compensate for something lost, missed, or deficient (in this case, time and quota)."
+                },
+                {
+                    q: "Critically analyze the following sentence for logical coherence and grammatical syntax: 'Walking down the historic street, the old oak trees were incredibly beautiful.'<br><br>Which revised option effectively resolves the dangling modifier error?",
+                    options: ["No revision is necessary; the sentence is grammatically sound.", "Walking down the historic street, I noticed the old oak trees were incredibly beautiful.", "The old oak trees were incredibly beautiful walking down the historic street.", "Incredibly beautiful, the old oak trees were walking down the historic street."],
+                    answer: 1,
+                    explanation: "The original sentence implies the trees were performing the action of walking. Option 1 introduces a logical subject ('I') who is doing the walking while observing the trees."
+                },
+                {
+                    q: "Unscramble the fragments to form a complex sentence indicating a strict condition leading to a negative consequence:<br><br>(1) unless / (2) drastically improve / (3) we / (4) the entire marketing project / (5) our inter-departmental communication / (6) will ultimately fail",
+                    options: ["4 - 6 - 1 - 3 - 2 - 5", "1 - 3 - 2 - 5 - 4 - 6", "3 - 2 - 5 - 1 - 4 - 6", "Both Option 1 and Option 2 are grammatically valid configurations."],
+                    answer: 3,
+                    explanation: "Both 'The entire marketing project will ultimately fail unless we drastically improve our inter-departmental communication' (Option 1 format) and 'Unless we drastically improve our inter-departmental communication, the entire marketing project will ultimately fail' (Option 2 format) are correct conditional structures."
+                }
+            ]
+        }
+    };
+
+    // State variables
+    let currentCategoryData = null;
+    let currentQuestionIndex = 0;
+    let userAnswers = [];
+    
+    // Timer variables
+    let timerInterval;
+    let secondsElapsed = 0;
+
+    // DOM Elements
+    const navBtnWords = document.getElementById('btn-words');
+    const navBtnReading = document.getElementById('btn-reading');
+    const navBtnSpoken = document.getElementById('btn-spoken');
+    const navBtnHots = document.getElementById('btn-hots');
+    
+    const singleQuestionContainer = document.getElementById('single-question-container');
+    const welcomeMessage = document.getElementById('welcome-message');
+    const quizHeader = document.getElementById('quiz-header');
+    const quizControls = document.getElementById('quiz-controls');
+    const summaryScreen = document.getElementById('summary-screen');
+    
+    const categoryTitle = document.getElementById('current-category-title');
+    const questionCounter = document.getElementById('question-counter');
+    const timerDisplay = document.getElementById('timer-display');
+    
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    const btnCheck = document.getElementById('btn-check');
+
+    // Remove old "all" nav button if it exists (from previous version)
+    const btnAll = document.getElementById('btn-all');
+    if(btnAll) btnAll.remove();
+
+    function resetNavStyles() {
+        [navBtnWords, navBtnReading, navBtnSpoken, navBtnHots].forEach(btn => {
+            if(btn) {
+                btn.classList.remove('bg-white', 'text-indigo-800');
+                btn.classList.add('text-indigo-100', 'hover:bg-indigo-600');
+            }
+        });
+    }
+
+    function formatTime(totalSeconds) {
+        const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+        const s = (totalSeconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    function updateTimerDisplay() {
+        secondsElapsed++;
+        timerDisplay.textContent = formatTime(secondsElapsed);
+        
+        // Optional: Add visual warning if taking a long time (e.g., > 2 mins per question average)
+        if (secondsElapsed > currentCategoryData.count * 120) {
+            timerDisplay.classList.add('timer-warning');
+        }
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        secondsElapsed = 0;
+        timerDisplay.textContent = "00:00";
+        timerDisplay.classList.remove('timer-warning');
+        timerInterval = setInterval(updateTimerDisplay, 1000);
+    }
+    
+    function stopTimer() {
+        clearInterval(timerInterval);
+    }
+
+    function startCategory(categoryKey) {
+        resetNavStyles();
+        const activeBtn = document.getElementById(`btn-${categoryKey}`);
+        if(activeBtn) {
+            activeBtn.classList.remove('text-indigo-100', 'hover:bg-indigo-600');
+            activeBtn.classList.add('bg-white', 'text-indigo-800');
+        }
+
+        currentCategoryData = questionsData[categoryKey];
+        currentQuestionIndex = 0;
+        
+        // Initialize user answers tracking array
+        userAnswers = new Array(currentCategoryData.count).fill(null);
+
+        // UI Updates
+        welcomeMessage.classList.add('hidden-element');
+        summaryScreen.classList.add('hidden-element');
+        quizHeader.classList.remove('hidden-element');
+        quizControls.classList.remove('hidden-element');
+        
+        categoryTitle.textContent = currentCategoryData.title;
+        
+        startTimer();
+        renderSingleQuestion();
+    }
+
+    function renderSingleQuestion() {
+        const q = currentCategoryData.questions[currentQuestionIndex];
+        
+        // Update counter
+        questionCounter.textContent = `Question ${currentQuestionIndex + 1} of ${currentCategoryData.count}`;
+        
+        // Update Buttons state
+        btnPrev.disabled = currentQuestionIndex === 0;
+        
+        if (currentQuestionIndex === currentCategoryData.count - 1) {
+            btnNext.textContent = "Finish Practice";
+            btnNext.classList.replace('bg-emerald-600', 'bg-indigo-800');
+            btnNext.classList.replace('hover:bg-emerald-700', 'hover:bg-indigo-900');
+        } else {
+            btnNext.textContent = "Next";
+            btnNext.classList.replace('bg-indigo-800', 'bg-emerald-600');
+            btnNext.classList.replace('hover:bg-indigo-900', 'hover:bg-emerald-700');
+        }
+
+        // Generate Options HTML (using index 0,1,2,3 for A,B,C,D)
+        const labels = ['A', 'B', 'C', 'D'];
+        let optionsHtml = q.options.map((opt, index) => {
+            const isSelected = userAnswers[currentQuestionIndex] === index;
+            const selectedClass = isSelected ? 'bg-indigo-50 border-indigo-500' : 'bg-gray-50 border-gray-200 hover:bg-gray-100 cursor-pointer';
+            
+            return `
+            <div onclick="selectOption(${index})" class="option-container border-2 ${selectedClass} rounded-md p-4 mb-3 transition-colors flex items-start">
+                <span class="inline-flex items-center justify-center h-6 w-6 rounded bg-white border border-gray-300 text-gray-700 text-xs font-bold mr-3 flex-shrink-0 mt-0.5">
+                    ${labels[index]}
+                </span>
+                <span class="text-gray-800 leading-relaxed">${opt}</span>
+            </div>
+            `;
+        }).join('');
+
+        // Build Card HTML
+        const cardHtml = `
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
+                <div class="mb-6 pb-6 border-b border-gray-100">
+                    <h3 class="text-lg md:text-xl text-gray-800 leading-relaxed">${q.q}</h3>
+                </div>
+                
+                <div class="options-group">
+                    ${optionsHtml}
+                </div>
+                
+                <div id="explanation-box" class="hidden-element mt-6 p-5 bg-yellow-50 rounded-md border border-yellow-200">
+                    <p class="font-bold text-gray-800 mb-2 text-lg">Correct Answer: <span class="text-indigo-700">${labels[q.answer]}</span></p>
+                    <p class="text-gray-700 leading-relaxed">${q.explanation}</p>
+                </div>
+            </div>
+        `;
+
+        // We replace the welcome message or previous question with the new card
+        singleQuestionContainer.innerHTML = cardHtml;
+        
+        // Reset check button state based on if they already checked it
+        // For simplicity in this practice mode, we just hide explanation initially
+        btnCheck.disabled = userAnswers[currentQuestionIndex] === null;
+    }
+
+    function selectOption(optionIndex) {
+        userAnswers[currentQuestionIndex] = optionIndex;
+        btnCheck.disabled = false;
+        
+        // Visual update (re-render just updates classes)
+        renderSingleQuestion(); 
+    }
+
+    function checkAnswer() {
+        const explanationBox = document.getElementById('explanation-box');
+        if (explanationBox) {
+            explanationBox.classList.remove('hidden-element');
+            explanationBox.classList.add('show-answer');
+            
+            // Highlight correct answer
+            const q = currentCategoryData.questions[currentQuestionIndex];
+            const options = document.querySelectorAll('.option-container');
+            
+            options.forEach((opt, idx) => {
+                opt.classList.remove('cursor-pointer', 'hover:bg-gray-100');
+                opt.onclick = null; // Disable clicking after checking
+                
+                if (idx === q.answer) {
+                    opt.classList.remove('bg-gray-50', 'bg-indigo-50', 'border-gray-200', 'border-indigo-500');
+                    opt.classList.add('bg-green-50', 'border-green-500');
+                } else if (idx === userAnswers[currentQuestionIndex] && idx !== q.answer) {
+                    opt.classList.remove('bg-indigo-50', 'border-indigo-500');
+                    opt.classList.add('bg-red-50', 'border-red-500');
+                }
+            });
+            
+            btnCheck.disabled = true; // Disable check button after clicking
+        }
+    }
+
+    function prevQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            renderSingleQuestion();
+        }
+    }
+
+    function nextQuestion() {
+        if (currentQuestionIndex < currentCategoryData.count - 1) {
+            currentQuestionIndex++;
+            renderSingleQuestion();
+        } else {
+            finishPractice();
+        }
+    }
+
+    function finishPractice() {
+        stopTimer();
+        
+        quizHeader.classList.add('hidden-element');
+        singleQuestionContainer.innerHTML = ''; // Clear question
+        quizControls.classList.add('hidden-element');
+        
+        document.getElementById('summary-category').textContent = currentCategoryData.title.split(':')[0]; // Just get "Bagian X"
+        document.getElementById('summary-time').textContent = formatTime(secondsElapsed);
+        
+        summaryScreen.classList.remove('hidden-element');
+    }
+
+    function resetApp() {
+        resetNavStyles();
+        summaryScreen.classList.add('hidden-element');
+        welcomeMessage.classList.remove('hidden-element');
+        singleQuestionContainer.innerHTML = '';
+        singleQuestionContainer.appendChild(welcomeMessage);
+        currentCategoryData = null;
+    }
+
+</script>
+</body>
+</html>
